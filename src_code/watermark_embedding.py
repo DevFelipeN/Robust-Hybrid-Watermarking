@@ -121,7 +121,9 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     else:
         W_resized = W.copy()
 
-    watermarkpath = "/home/chinasa/python_projects/watermark/output/embed_watermark.png"
+    watermarkpath = "/content/output/embed_watermark.png"
+    os.makedirs("/content/output", exist_ok=True)
+    
     binary = covert_to_binary(W_resized)
     cv2.imwrite(watermarkpath, binary)
 
