@@ -91,7 +91,7 @@ def embed_watermark_dwt(dwt_coeffs_original, watermark_sub_block, scaling_factor
     watermarked_dwt_coeffs = (watermarked_cA, (cH, cV, cD))
     return watermarked_dwt_coeffs
 
-def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_factor,arnold_iterations=1):
+def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_factor,arnold_iterations=1,output_paths):
     #load images
     I_O = cv2.imread(cover_image_path)
     if I_O is None:
@@ -121,9 +121,8 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     else:
         W_resized = W.copy()
 
-    watermarkpath = "/content/output/embed_watermark.png"
-    os.makedirs("/content/output", exist_ok=True)
-    
+    watermarkpath = f"{output_paths}/embed_watermark.png"
+
     binary = covert_to_binary(W_resized)
     cv2.imwrite(watermarkpath, binary)
 
@@ -249,122 +248,35 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     return I_W
 
 
-'''
-if __name__ == "__main__":
-    cover_image_path = "/home/chinasa/python_projects/watermark/images/sample.png"
-    watermark_image_path = "/home/chinasa/python_projects/watermark/images/watermark.png"
-
-    scaling_factor = 0.01
-    arnold_iterations = 1
-
-    try:
-        watermarked_image = watermark_embedding_process(
-            cover_image_path,
-            watermark_image_path,
-            scaling_factor,
-            arnold_iterations
-        )
-
-        output_path = "/home/chinasa/python_projects/watermark/output/watermarked_image.png"
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        cv2.imwrite(output_path, watermarked_image)
-        print(f"Watermark embedding complete. Watermarked image saved to {output_path}")
-
-        cover = cv2.imread(cover_image_path)
-        watermark = cv2.imread(watermark_image_path, cv2.IMREAD_GRAYSCALE)
-
-        if cover is not None:
-            cv2.imshow("Original Cover", cover)
-        if watermark is not None:
-            cv2.imshow("Original Watermark", watermark)
-        cv2.imwrite("output_preview.png", watermarked_image)
-        print("Watermarked image saved as 'output_preview.png'")
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print("Please ensure you have OpenCV, NumPy, and PyWavelets installed (`pip install opencv-python numpy pywavelets`).")
-        print("Also, verify your image paths and the precise implementation of sub-functions.")
-
-'''
-
-'''
-
-if __name__ == "__main__":
-    cover_image_path = f"/home/chinasa/python_projects/watermark/images/sample.png"
-    watermark_image_path = "/home/chinasa/python_projects/watermark/images/watermark.png"
-
-    scaling_factor = 1
-    arnold_iterations = 15
-
-    try:
-        watermarked_image = watermark_embedding_process(
-            cover_image_path,
-            watermark_image_path,
-            scaling_factor,
-            arnold_iterations
-        )
-
-        output_path = "/home/chinasa/python_projects/watermark/output/watermarked_image.png"
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        cv2.imwrite(output_path, watermarked_image)
-        print(f"Watermark embedding complete. Watermarked image saved to {output_path}")
-
-        # Load images for comparison
-        cover = cv2.imread(cover_image_path)
-        watermark = cv2.imread(watermark_image_path, cv2.IMREAD_GRAYSCALE)
-
-        # --- Compute PSNR ---
-        psnr_value = cv2.PSNR(cover, watermarked_image)
-
-        # --- Compute SSIM ---
-        # Convert to grayscale for SSIM
-        cover_gray = cv2.cvtColor(cover, cv2.COLOR_BGR2GRAY)
-        watermarked_gray = cv2.cvtColor(watermarked_image, cv2.COLOR_BGR2GRAY)
-        ssim_value, _ = ssim(cover_gray, watermarked_gray, full=True)
-
-        print(f"PSNR: {psnr_value:.2f} dB")
-        print(f"SSIM: {ssim_value:.4f}")
-
-        # Show preview
-        if cover is not None:
-            cv2.imshow("Original Cover", cover)
-        if watermark is not None:
-            cv2.imshow("Original Watermark", watermark)
-        cv2.imwrite("output_preview.png", watermarked_image)
-        print("Watermarked image saved as 'output_preview.png'")
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print("Please ensure you have OpenCV, NumPy, and PyWavelets installed (`pip install opencv-python numpy pywavelets`).")
-        print("Also, verify your image paths and the precise implementation of sub-functions.")
-'''
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cover", required=True)
     parser.add_argument("--watermark", required=True)
-    parser.add_argument("--out", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--scaling_factor", required=True)
+    parser.add_argument("--arnold_iterations", required=True)
 
     args = parser.parse_args()
 
     cover_image_path = args.cover
     watermark_image_path = args.watermark
-    output_path = args.out
-
-    scaling_factor = 1
-    arnold_iterations = 15
+    output_path = args.output
+    scaling_factor = args.scaling_factor
+    arnold_iterations = args.arnold_iterations
 
     try:
         watermarked_image = watermark_embedding_process(
             cover_image_path,
             watermark_image_path,
             scaling_factor,
-            arnold_iterations
+            arnold_iterations,
+            output_path
         )
 
+        watermarked_path = f"{output_path}/watermarked.png"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        cv2.imwrite(output_path, watermarked_image)
-        print(f"Watermark embedding complete. Saved to {output_path}")
+        cv2.imwrite(watermarked_path, watermarked_image) 
+        print(f"Watermark embedding complete. Saved to {watermarked_path}")
 
         cover = cv2.imread(cover_image_path)
         watermark = cv2.imread(watermark_image_path, cv2.IMREAD_GRAYSCALE)
