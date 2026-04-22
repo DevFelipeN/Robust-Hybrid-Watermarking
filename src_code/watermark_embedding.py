@@ -6,8 +6,7 @@ from scipy.fftpack import dct, idct
 import matplotlib.pyplot as plt
 import os
 from skimage.metrics import structural_similarity as ssim
-
-
+import argparse
 
 #padd and crop function for images that are not sqare images
 def make_square(img):
@@ -286,8 +285,10 @@ if __name__ == "__main__":
 
 '''
 
+'''
+
 if __name__ == "__main__":
-    cover_image_path = "/home/chinasa/python_projects/watermark/images/sample.png"
+    cover_image_path = f"/home/chinasa/python_projects/watermark/images/sample.png"
     watermark_image_path = "/home/chinasa/python_projects/watermark/images/watermark.png"
 
     scaling_factor = 1
@@ -334,3 +335,51 @@ if __name__ == "__main__":
         print(f"An error occurred: {e}")
         print("Please ensure you have OpenCV, NumPy, and PyWavelets installed (`pip install opencv-python numpy pywavelets`).")
         print("Also, verify your image paths and the precise implementation of sub-functions.")
+'''
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cover", required=True)
+    parser.add_argument("--watermark", required=True)
+    parser.add_argument("--out", required=True)
+
+    args = parser.parse_args()
+
+    cover_image_path = args.cover
+    watermark_image_path = args.watermark
+    output_path = args.out
+
+    scaling_factor = 1
+    arnold_iterations = 15
+
+    try:
+        watermarked_image = watermark_embedding_process(
+            cover_image_path,
+            watermark_image_path,
+            scaling_factor,
+            arnold_iterations
+        )
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        cv2.imwrite(output_path, watermarked_image)
+        print(f"Watermark embedding complete. Saved to {output_path}")
+
+        cover = cv2.imread(cover_image_path)
+        watermark = cv2.imread(watermark_image_path, cv2.IMREAD_GRAYSCALE)
+
+        psnr_value = cv2.PSNR(cover, watermarked_image)
+
+        cover_gray = cv2.cvtColor(cover, cv2.COLOR_BGR2GRAY)
+        watermarked_gray = cv2.cvtColor(watermarked_image, cv2.COLOR_BGR2GRAY)
+        ssim_value, _ = ssim(cover_gray, watermarked_gray, full=True)
+
+        print(f"PSNR: {psnr_value:.2f} dB")
+        print(f"SSIM: {ssim_value:.4f}")
+
+        cv2.imwrite("output_preview.png", watermarked_image)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    main()
