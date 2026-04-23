@@ -38,9 +38,11 @@ def watermark_extraction_process(original_cover_path, watermarked_image_path, or
         raise FileNotFoundError(f"Watermarked image not found: {watermarked_image_path}")
     
     # --- GET ORIGINAL WATERMARK SHAPE FROM THE IMAGE FILE ---
-    watermark_original = cv2.imread(original_watermark_path, cv2.IMREAD_GRAYSCALE)
+    watermark_original = cv2.imread(original_watermark_path, cv2.IMREAD_GRAYSCALE) #Carrega a imagem da marca em tons de cinza
     if watermark_original is None:
         raise FileNotFoundError(f"Original watermark image not found: {original_watermark_path}")
+
+    #Pega o tamanho da imagem da marca original    
     original_watermark_shape = watermark_original.shape
     original_h, original_w = original_watermark_shape
     # --- END ---
