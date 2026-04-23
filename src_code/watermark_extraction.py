@@ -5,6 +5,7 @@ import pywt
 from scipy.fftpack import dct, idct, fft2, ifft2, fftshift, ifftshift
 from watermark_embedding import block_dct2d, block_idct2d
 from skimage.metrics import structural_similarity as ssim
+import argparse
 
 def inverse_arnold_transform(image, original_shape, iterations=1):
     if image.shape[0] != image.shape[1]:
@@ -135,8 +136,8 @@ def main():
     parser.add_argument("--watermark", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--watermarked_image_path", required=True)
-    parser.add_argument("--scaling_factor", required=True)
-    parser.add_argument("--arnold_iterations", required=True)
+    parser.add_argument("--scaling_factor", type=float, required=True)
+    parser.add_argument("--arnold_iterations", type=int, required=True)
 
     args = parser.parse_args()
 
