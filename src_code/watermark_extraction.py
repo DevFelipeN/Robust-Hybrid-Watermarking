@@ -47,12 +47,13 @@ def watermark_extraction_process(original_cover_path, watermarked_image_path, or
     original_h, original_w = original_watermark_shape
     # --- END ---
 
-    block_size = 8
+    block_size = 8 # tamanho dos blocos de aplicação do DCT
 
     # Separate images into B, G, R components and perform DCT
-    B_O, G_O, R_O = cv2.split(I_O)
-    B_W, G_W, R_W = cv2.split(I_W)
+    B_O, G_O, R_O = cv2.split(I_O) # Imagem original
+    B_W, G_W, R_W = cv2.split(I_W) # Imagem marcada
 
+    # Aplicando DCT nos canais das duas imagens
     R_O_DCT = block_dct2d(R_O.astype(np.float32), block_size)
     G_O_DCT = block_dct2d(G_O.astype(np.float32), block_size)
     B_O_DCT = block_dct2d(B_O.astype(np.float32), block_size)
@@ -60,6 +61,7 @@ def watermark_extraction_process(original_cover_path, watermarked_image_path, or
     G_W_DCT = block_dct2d(G_W.astype(np.float32), block_size)
     B_W_DCT = block_dct2d(B_W.astype(np.float32), block_size)
 
+    # Aplicando DWT nos resultados de DCT
     # Perform DWT on the DCT transformed color components
     coeffs_R_O_DCT_DWT = pywt.dwt2(R_O_DCT, 'haar')
     coeffs_G_O_DCT_DWT = pywt.dwt2(G_O_DCT, 'haar')
@@ -68,18 +70,22 @@ def watermark_extraction_process(original_cover_path, watermarked_image_path, or
     coeffs_G_W_DCT_DWT = pywt.dwt2(G_W_DCT, 'haar')
     coeffs_B_W_DCT_DWT = pywt.dwt2(B_W_DCT, 'haar')
 
+    # -- ATÉ AQUI AS IMAGENS ORIGINAIS E MARCADAS SEPARADAS POR CANAIS, ESTÃO TRANFORMADAS PARA O DOMINIO DA FREQUÊNCIA --------
+
     def extract_channel_watermark(coeffs_O, coeffs_W, scaling_factor, original_watermark_shape, block_size=8):
+        # pega as 4 bandas da DWT: LL, LH, HL, HH
         cA_O, (cH_O, cV_O, cD_O) = coeffs_O
         cA_W, (cH_W, cV_W, cD_W) = coeffs_W
 
         # Extract the watermark DCT coefficients (inverting embedding formula)
-        W_A = (cA_W - cA_O) / scaling_factor
+        W_A = (cA_W - cA_O) / scaling_factor 
         W_H = (cH_W - cH_O) / scaling_factor
         W_V = (cV_W - cV_O) / scaling_factor
         W_D = (cD_W - cD_O) / scaling_factor
 
+        # 'Cria uma imagem vazia do tamanho da imagem original da marca
         # Resize all components to original watermark size using frequency-domain alignment
-        target_h, target_w = original_watermark_shape
+        target_h, target_w = original_watermark_shape #
         recon_h, recon_w = target_h, target_w
         W_ext_DCT = np.zeros((recon_h, recon_w), dtype=np.float32)
 
@@ -98,7 +104,7 @@ def watermark_extraction_process(original_cover_path, watermarked_image_path, or
             resized_block = idct(idct(resized_dct.T, norm='ortho').T, norm='ortho')
             return resized_block
 
-        mid_h, mid_w = recon_h // 2, recon_w // 2
+        mid_h, mid_w = recon_h // 2, recon_w // 2 # Define o centro da imagem da marca
         W_ext_DCT[:mid_h, :mid_w] = dct_resize(W_A, (mid_h, mid_w))
         W_ext_DCT[:mid_h, mid_w:] = dct_resize(W_H, (mid_h, recon_w - mid_w))
         W_ext_DCT[mid_h:, :mid_w] = dct_resize(W_V, (recon_h - mid_h, mid_w))

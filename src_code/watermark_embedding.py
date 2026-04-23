@@ -151,7 +151,7 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     h_wr, w_wr = W_R_DCT.shape #dividing into sub-blocks
     cA_R_shape = coeff_R_DCT_DWT[0].shape # Pega a sub-banda LL
     W_R_DCT_resized = cv2.resize(W_R_DCT, (cA_R_shape[1] * 2, cA_R_shape[0] * 2), interpolation=cv2.INTER_LINEAR) # Aumenta o tamanho da marca para o dobro da sub-banda LL da cover    
-    mid_h, mid_w = W_R_DCT_resized.shape[0] // 2, W_R_DCT_resized.shape[1] // 2  # Define o centro da marca
+    mid_h, mid_w = W_R_DCT_resized.shape[0] // 2, W_R_DCT_resized.shape[1] // 2  # Define o centro da imagem da marca
 
     # Divide a imagem em 4 partes
     W_RA = W_R_DCT_resized[0:mid_h, 0:mid_w]
