@@ -92,28 +92,30 @@ def embed_watermark_dwt(dwt_coeffs_original, watermark_sub_block, scaling_factor
     return watermarked_dwt_coeffs
 
 def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_factor,output_path,arnold_iterations=1):
-    #load images
+    #load image cover
     I_O = cv2.imread(cover_image_path)
     if I_O is None:
         raise FileNotFoundError(f"Watermark image not found: {watermark_image_path}")
-    
+
+    #load image watermark
     W = cv2.imread(watermark_image_path,cv2.IMREAD_GRAYSCALE)
     if W is None:
         raise FileNotFoundError(f"Watermark image not found: {watermark_image_path}")
 
     #separating the cover image into R, G and B color components with DCT transforms
     B,G,R = cv2.split(I_O)
-    block_size = 8
+
+    block_size = 8 
+
+    #DCT to the three images
     R_DCT = block_dct2d(R.astype(np.float32),block_size)
     G_DCT = block_dct2d(G.astype(np.float32),block_size)
     B_DCT = block_dct2d(B.astype(np.float32),block_size)
 
-    #DWT to the DCT tranformed color components
+    #DWT to the DCT tranformed color components 
     coeff_R_DCT_DWT = pywt.dwt2(R_DCT,'haar')
     coeff_G_DCT_DWT = pywt.dwt2(G_DCT,'haar')
-    coeff_B_DCT_DWT = pywt.dwt2(B_DCT,'haar')
-
-    #A partir daqui as imagens ficam 512 x 512 
+    coeff_B_DCT_DWT = pywt.dwt2(B_DCT,'haar') 
 
     w_size = max(W.shape) #Pega a maior dimensão da imagem da marca
 
@@ -132,7 +134,7 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     # Embaralha a imagem da marca
     W_scrambled = arnold_transform(W_resized,arnold_iterations)
     
-    #convert the scrambled watermark to binary watermark
+    #convert the scrambled watermark to binary  watermark
     W_binary = covert_to_binary(W_scrambled)
 
     h_w, w_w = W_binary.shape
@@ -148,18 +150,23 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     W_B_DCT = block_dct2d(W_binary_B_part.astype(np.float32),block_size)
 
     #embed the W_R_DCT
-    h_wr, w_wr = W_R_DCT.shape #dividing into sub-blocks
-    cA_R_shape = coeff_R_DCT_DWT[0].shape # Pega a sub-banda LL
-    W_R_DCT_resized = cv2.resize(W_R_DCT, (cA_R_shape[1] * 2, cA_R_shape[0] * 2), interpolation=cv2.INTER_LINEAR) # Aumenta o tamanho da marca para o dobro da sub-banda LL da cover    
-    mid_h, mid_w = W_R_DCT_resized.shape[0] // 2, W_R_DCT_resized.shape[1] // 2  # Define o centro da imagem da marca
+    h_wr, w_wr = W_R_DCT.shape  #get the height and width of the brand
 
-    # Divide a imagem em 4 partes
+    cA_R_shape = coeff_R_DCT_DWT[0].shape # get the sub-banda LL
+    W_R_DCT_resized = cv2.resize(W_R_DCT, 
+    (cA_R_shape[1] * 2, cA_R_shape[0] * 2), 
+    interpolation=cv2.INTER_LINEAR)   
+
+    #Defines the center of the watermark image.   
+    mid_h, mid_w = W_R_DCT_resized.shape[0] // 2, W_R_DCT_resized.shape[1] // 2
+
+    #Divides the image into four parts
     W_RA = W_R_DCT_resized[0:mid_h, 0:mid_w]
     W_RB = W_R_DCT_resized[0:mid_h, mid_w:]
     W_RC = W_R_DCT_resized[mid_h:, 0:mid_w]
     W_RD = W_R_DCT_resized[mid_h:, mid_w:]
 
-    # Pega cada sub-banca da tranformada DWT
+    #Extracts each sub-band from the DWT transform.
     cA_R, (cH_R, cV_R, cD_R) = coeff_R_DCT_DWT 
 
     # Need to resize watermark parts to match DWT band sizes
@@ -168,7 +175,7 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     W_RC_resized = cv2.resize(W_RC.astype(np.float32), (cV_R.shape[1], cV_R.shape[0]), interpolation=cv2.INTER_LINEAR)
     W_RD_resized = cv2.resize(W_RD.astype(np.float32), (cD_R.shape[1], cD_R.shape[0]), interpolation=cv2.INTER_LINEAR)
 
-    # Adiciona cada parte da marca a nas sub-bandas das DWT R 
+    #Adds each watermark part into the DWT sub-bands of the R channel. 
     LL_R_W = cA_R + scaling_factor * W_RA_resized
     LH_R_W = cH_R + scaling_factor * W_RB_resized
     HL_R_W = cV_R + scaling_factor * W_RC_resized
@@ -177,8 +184,8 @@ def watermark_embedding_process(cover_image_path,watermark_image_path,scaling_fa
     watermarked_coeffs_R_DCT_DWT = (LL_R_W, (LH_R_W, HL_R_W, HH_R_W))
 
     #IDWT to watermarked DWT bands
-    I_R_DCT_watermarked = pywt.idwt2(watermar   ked_coeffs_R_DCT_DWT, 'haar')
-    I_R_DCT_watermarked = I_R_DCT_watermarked[:R_DCT.shape[0], :R_DCT.shape[1]] # Ajustando o tamanho da imagem marcada para mesmo tamanho da R_DC
+    I_R_DCT_watermarked = pywt.idwt2(watermarked_coeffs_R_DCT_DWT, 'haar')
+    I_R_DCT_watermarked = I_R_DCT_watermarked[:R_DCT.shape[0], :R_DCT.shape[1]] # Ajustando o tamanho da imagem marcada para mesmo tamanho da R_DCT
 
     #IDCT to obtain the watermarked 
     I_R_W = block_idct2d(I_R_DCT_watermarked, block_size)

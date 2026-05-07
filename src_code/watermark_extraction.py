@@ -63,7 +63,7 @@ def watermark_extraction_process(original_cover_path, watermarked_image_path, or
 
     # Aplicando DWT nos resultados de DCT
     # Perform DWT on the DCT transformed color components
-    coeffs_R_O_DCT_DWT = pywt.dwt2(R_O_DCT, 'haar')
+    coeffs_R_O_DCT_DWT = pywt.dwt2(R_O_DCT, 'haar') 
     coeffs_G_O_DCT_DWT = pywt.dwt2(G_O_DCT, 'haar')
     coeffs_B_O_DCT_DWT = pywt.dwt2(B_O_DCT, 'haar')
     coeffs_R_W_DCT_DWT = pywt.dwt2(R_W_DCT, 'haar')
