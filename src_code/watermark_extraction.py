@@ -190,6 +190,8 @@ def main():
                 interpolation=cv2.INTER_AREA
             )
 
+             _, original_watermark = cv2.threshold(original_watermark, 128, 255, cv2.THRESH_BINARY)
+
             # Convert both to uint8
             extracted_resized = extracted_resized.astype(np.uint8)
             original_watermark = original_watermark.astype(np.uint8)
